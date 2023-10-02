@@ -9,3 +9,81 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+enum Side {
+  DEBIT
+  CREDIT
+}
+
+model Account {
+  name                              String                @id
+  createdAt                         DateTime              @default(now())
+  updatedAt                         DateTime              @updatedAt
+  balance                           Int
+  side                              Side
+  parentAccountName                 String?
+  parentAccount                     Account?              @relation("AccountHierarchy", fields: [parentAccountName], references: [name])
+  childAccounts                     Account[]             @relation("AccountHierarchy")
+  debitRelatedTransactions          Transaction[]         @relation("Debit")
+  creditRelatedTransactions         Transaction[]         @relation("Credit")
+  debitRelatedExpectedTransactions  ExpectedTransaction[] @relation("ExpectedDebit")
+  creditRelatedExpectedTransactions ExpectedTransaction[] @relation("ExpectedCredit")
+}
+
+model Transaction {
+  id                Int              @id @default(autoincrement())
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  amount            Int
+  date              DateTime
+  debit             Account          @relation("Debit", fields: [debitAccountName], references: [name])
+  debitAccountName  String
+  credit            Account          @relation("Credit", fields: [creditAccountName], references: [name])
+  creditAccountName String
+  transactionTags   TransactionTag[]
+}
+
+enum RecurringInterval {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model ExpectedTransaction {
+  id                      Int                      @id @default(autoincrement())
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  amount                  Int
+  date                    DateTime
+  recurring               Boolean
+  recurringInterval       RecurringInterval
+  recurringEnd            DateTime?
+  debit                   Account                  @relation("ExpectedDebit", fields: [debitAccountName], references: [name])
+  debitAccountName        String
+  credit                  Account                  @relation("ExpectedCredit", fields: [creditAccountName], references: [name])
+  creditAccountName       String
+  expectedTransactionTags ExpectedTransactionTag[]
+}
+
+model Tag {
+  name                    String                   @id
+  transactionTags         TransactionTag[]
+  expectedTransactionTags ExpectedTransactionTag[]
+}
+
+model TransactionTag {
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  transactionId Int
+  tag           Tag         @relation(fields: [tagName], references: [name])
+  tagName       String
+}
+
+model ExpectedTransactionTag {
+  id                    Int                 @id @default(autoincrement())
+  expectedTransaction   ExpectedTransaction @relation(fields: [expectedTransactionId], references: [id])
+  expectedTransactionId Int
+  tag                   Tag                 @relation(fields: [tagName], references: [name])
+  tagName               String
+}
