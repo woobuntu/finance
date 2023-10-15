@@ -15,11 +15,9 @@ async function bootstrap() {
 
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
+  const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(
-    new LogErrorFilter(
-      app.get(HttpAdapterHost),
-      app.get(WINSTON_MODULE_NEST_PROVIDER),
-    ),
+    new LogErrorFilter(httpAdapter, app.get(WINSTON_MODULE_NEST_PROVIDER)),
   );
 
   await app.listen(4000);

@@ -3,7 +3,6 @@ CREATE TABLE `Account` (
     `name` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
-    `balance` INTEGER NOT NULL,
     `side` ENUM('DEBIT', 'CREDIT') NOT NULL,
     `parentAccountName` VARCHAR(191) NULL,
 
@@ -24,15 +23,14 @@ CREATE TABLE `Transaction` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ExpectedTransaction` (
+CREATE TABLE `PeriodicTransaction` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `amount` INTEGER NOT NULL,
-    `date` DATETIME(3) NOT NULL,
-    `recurring` BOOLEAN NOT NULL,
-    `recurringInterval` ENUM('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY') NOT NULL,
-    `recurringEnd` DATETIME(3) NULL,
+    `interval` ENUM('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY') NOT NULL,
+    `startDate` DATETIME(3) NOT NULL,
+    `endDate` DATETIME(3) NOT NULL,
     `debitAccountName` VARCHAR(191) NOT NULL,
     `creditAccountName` VARCHAR(191) NOT NULL,
 
@@ -47,6 +45,15 @@ CREATE TABLE `Tag` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `AccountTag` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `accountName` VARCHAR(191) NOT NULL,
+    `tagName` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `TransactionTag` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `transactionId` INTEGER NOT NULL,
@@ -56,9 +63,9 @@ CREATE TABLE `TransactionTag` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ExpectedTransactionTag` (
+CREATE TABLE `PeriodicTransactionTag` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `expectedTransactionId` INTEGER NOT NULL,
+    `periodicTransactionId` INTEGER NOT NULL,
     `tagName` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`id`)
@@ -74,10 +81,16 @@ ALTER TABLE `Transaction` ADD CONSTRAINT `Transaction_debitAccountName_fkey` FOR
 ALTER TABLE `Transaction` ADD CONSTRAINT `Transaction_creditAccountName_fkey` FOREIGN KEY (`creditAccountName`) REFERENCES `Account`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ExpectedTransaction` ADD CONSTRAINT `ExpectedTransaction_debitAccountName_fkey` FOREIGN KEY (`debitAccountName`) REFERENCES `Account`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `PeriodicTransaction` ADD CONSTRAINT `PeriodicTransaction_debitAccountName_fkey` FOREIGN KEY (`debitAccountName`) REFERENCES `Account`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ExpectedTransaction` ADD CONSTRAINT `ExpectedTransaction_creditAccountName_fkey` FOREIGN KEY (`creditAccountName`) REFERENCES `Account`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `PeriodicTransaction` ADD CONSTRAINT `PeriodicTransaction_creditAccountName_fkey` FOREIGN KEY (`creditAccountName`) REFERENCES `Account`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `AccountTag` ADD CONSTRAINT `AccountTag_accountName_fkey` FOREIGN KEY (`accountName`) REFERENCES `Account`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `AccountTag` ADD CONSTRAINT `AccountTag_tagName_fkey` FOREIGN KEY (`tagName`) REFERENCES `Tag`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `TransactionTag` ADD CONSTRAINT `TransactionTag_transactionId_fkey` FOREIGN KEY (`transactionId`) REFERENCES `Transaction`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -86,7 +99,7 @@ ALTER TABLE `TransactionTag` ADD CONSTRAINT `TransactionTag_transactionId_fkey` 
 ALTER TABLE `TransactionTag` ADD CONSTRAINT `TransactionTag_tagName_fkey` FOREIGN KEY (`tagName`) REFERENCES `Tag`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ExpectedTransactionTag` ADD CONSTRAINT `ExpectedTransactionTag_expectedTransactionId_fkey` FOREIGN KEY (`expectedTransactionId`) REFERENCES `ExpectedTransaction`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `PeriodicTransactionTag` ADD CONSTRAINT `PeriodicTransactionTag_periodicTransactionId_fkey` FOREIGN KEY (`periodicTransactionId`) REFERENCES `PeriodicTransaction`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ExpectedTransactionTag` ADD CONSTRAINT `ExpectedTransactionTag_tagName_fkey` FOREIGN KEY (`tagName`) REFERENCES `Tag`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `PeriodicTransactionTag` ADD CONSTRAINT `PeriodicTransactionTag_tagName_fkey` FOREIGN KEY (`tagName`) REFERENCES `Tag`(`name`) ON DELETE RESTRICT ON UPDATE CASCADE;

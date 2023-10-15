@@ -16,20 +16,22 @@ enum Side {
 }
 
 model Account {
-  name                              String                @id
-  createdAt                         DateTime              @default(now())
-  updatedAt                         DateTime              @updatedAt
-  balance                           Int
-  side                              Side
-  parentAccountName                 String?
-  parentAccount                     Account?              @relation("AccountHierarchy", fields: [parentAccountName], references: [name])
-  childAccounts                     Account[]             @relation("AccountHierarchy")
-  debitRelatedTransactions          Transaction[]         @relation("Debit")
-  creditRelatedTransactions         Transaction[]         @relation("Credit")
-  debitRelatedExpectedTransactions  ExpectedTransaction[] @relation("ExpectedDebit")
-  creditRelatedExpectedTransactions ExpectedTransaction[] @relation("ExpectedCredit")
+  name                               String                @id
+  createdAt                          DateTime              @default(now())
+  updatedAt                          DateTime              @updatedAt
+  side                               Side
+  parentAccountName                  String?
+  parentAccount                      Account?              @relation("AccountHierarchy", fields: [parentAccountName], references: [name])
+  childAccounts                      Account[]             @relation("AccountHierarchy")
+  debitRelatedTransactions           Transaction[]         @relation("Debit")
+  creditRelatedTransactions          Transaction[]         @relation("Credit")
+  debitRelatedPeriodicTransactions   PeriodicTransaction[] @relation("PeriodicDebit")
+  creditRelaterdPeriodicTransactions PeriodicTransaction[] @relation("PeriodicCredit")
+  accountTags                        AccountTag[]
 }
 
+// 예상 거래를 따로 구분하지 않는다. 
+// 예상 거래일이 도래했을 때 실제 거래에 맞게끔 수정 분개하면 된다.
 model Transaction {
   id                Int              @id @default(autoincrement())
   createdAt         DateTime         @default(now())
@@ -43,33 +45,42 @@ model Transaction {
   transactionTags   TransactionTag[]
 }
 
-enum RecurringInterval {
+enum Interval {
   DAILY
   WEEKLY
   MONTHLY
   YEARLY
 }
 
-model ExpectedTransaction {
+// 크론 같은 걸로 자동 기록?
+model PeriodicTransaction {
   id                      Int                      @id @default(autoincrement())
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
   amount                  Int
-  date                    DateTime
-  recurring               Boolean
-  recurringInterval       RecurringInterval
-  recurringEnd            DateTime?
-  debit                   Account                  @relation("ExpectedDebit", fields: [debitAccountName], references: [name])
+  interval                Interval
+  startDate               DateTime
+  endDate                 DateTime
+  debit                   Account                  @relation("PeriodicDebit", fields: [debitAccountName], references: [name])
   debitAccountName        String
-  credit                  Account                  @relation("ExpectedCredit", fields: [creditAccountName], references: [name])
+  credit                  Account                  @relation("PeriodicCredit", fields: [creditAccountName], references: [name])
   creditAccountName       String
-  expectedTransactionTags ExpectedTransactionTag[]
+  periodicTransactionTags PeriodicTransactionTag[]
 }
 
 model Tag {
   name                    String                   @id
   transactionTags         TransactionTag[]
-  expectedTransactionTags ExpectedTransactionTag[]
+  accountTags             AccountTag[]
+  periodicTransactionTags PeriodicTransactionTag[]
+}
+
+model AccountTag {
+  id          Int     @id @default(autoincrement())
+  account     Account @relation(fields: [accountName], references: [name])
+  accountName String
+  tag         Tag     @relation(fields: [tagName], references: [name])
+  tagName     String
 }
 
 model TransactionTag {
@@ -80,10 +91,10 @@ model TransactionTag {
   tagName       String
 }
 
-model ExpectedTransactionTag {
+model PeriodicTransactionTag {
   id                    Int                 @id @default(autoincrement())
-  expectedTransaction   ExpectedTransaction @relation(fields: [expectedTransactionId], references: [id])
-  expectedTransactionId Int
+  periodicTransaction   PeriodicTransaction @relation(fields: [periodicTransactionId], references: [id])
+  periodicTransactionId Int
   tag                   Tag                 @relation(fields: [tagName], references: [name])
   tagName               String
 }

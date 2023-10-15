@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import configuration from 'config/configuration';
 import { PrismaModule } from './prisma/prisma.module';
 import { LogModule } from './log/log.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { LogModule } from './log/log.module';
     }),
     PrismaModule,
     LogModule,
+    TransactionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
