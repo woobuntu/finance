@@ -8,5 +8,14 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
 
+  nginx:
+    image: nginx:alpine
+    ports:
+      - 80:80
+    volumes:
+      - ./config/client.conf:/etc/nginx/conf.d/client.conf
+    # depends_on:
+    #   - php
+
 volumes:
   woobuntu-finance-data:
