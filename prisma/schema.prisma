@@ -27,22 +27,20 @@ model Account {
   creditRelatedTransactions          Transaction[]         @relation("Credit")
   debitRelatedPeriodicTransactions   PeriodicTransaction[] @relation("PeriodicDebit")
   creditRelaterdPeriodicTransactions PeriodicTransaction[] @relation("PeriodicCredit")
-  accountTags                        AccountTag[]
 }
 
 // 예상 거래를 따로 구분하지 않는다. 
 // 예상 거래일이 도래했을 때 실제 거래에 맞게끔 수정 분개하면 된다.
 model Transaction {
-  id                Int              @id @default(autoincrement())
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  id                Int      @id @default(autoincrement())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   amount            Int
   date              DateTime
-  debit             Account          @relation("Debit", fields: [debitAccountName], references: [name])
+  debit             Account  @relation("Debit", fields: [debitAccountName], references: [name])
   debitAccountName  String
-  credit            Account          @relation("Credit", fields: [creditAccountName], references: [name])
+  credit            Account  @relation("Credit", fields: [creditAccountName], references: [name])
   creditAccountName String
-  transactionTags   TransactionTag[]
 }
 
 enum Interval {
@@ -54,47 +52,15 @@ enum Interval {
 
 // 크론 같은 걸로 자동 기록?
 model PeriodicTransaction {
-  id                      Int                      @id @default(autoincrement())
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
-  amount                  Int
-  interval                Interval
-  startDate               DateTime
-  endDate                 DateTime
-  debit                   Account                  @relation("PeriodicDebit", fields: [debitAccountName], references: [name])
-  debitAccountName        String
-  credit                  Account                  @relation("PeriodicCredit", fields: [creditAccountName], references: [name])
-  creditAccountName       String
-  periodicTransactionTags PeriodicTransactionTag[]
-}
-
-model Tag {
-  name                    String                   @id
-  transactionTags         TransactionTag[]
-  accountTags             AccountTag[]
-  periodicTransactionTags PeriodicTransactionTag[]
-}
-
-model AccountTag {
-  id          Int     @id @default(autoincrement())
-  account     Account @relation(fields: [accountName], references: [name])
-  accountName String
-  tag         Tag     @relation(fields: [tagName], references: [name])
-  tagName     String
-}
-
-model TransactionTag {
-  id            Int         @id @default(autoincrement())
-  transaction   Transaction @relation(fields: [transactionId], references: [id])
-  transactionId Int
-  tag           Tag         @relation(fields: [tagName], references: [name])
-  tagName       String
-}
-
-model PeriodicTransactionTag {
-  id                    Int                 @id @default(autoincrement())
-  periodicTransaction   PeriodicTransaction @relation(fields: [periodicTransactionId], references: [id])
-  periodicTransactionId Int
-  tag                   Tag                 @relation(fields: [tagName], references: [name])
-  tagName               String
+  id                Int      @id @default(autoincrement())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  amount            Int
+  interval          Interval
+  startDate         DateTime
+  endDate           DateTime
+  debit             Account  @relation("PeriodicDebit", fields: [debitAccountName], references: [name])
+  debitAccountName  String
+  credit            Account  @relation("PeriodicCredit", fields: [creditAccountName], references: [name])
+  creditAccountName String
 }

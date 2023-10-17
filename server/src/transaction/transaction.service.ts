@@ -15,6 +15,7 @@ import {
 import { isEqual, isString, isUndefined } from 'lodash';
 import { AccountService } from 'src/account/account.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getKoreanTime } from 'src/utils/getKoreanTime';
 
 @Injectable()
 export class TransactionService {
@@ -200,24 +201,28 @@ export class TransactionService {
       }
     }
 
-    const transactions = dates.map((date) => {
-      return this.prisma.transaction.create({
-        data: {
-          debit: {
-            connect: {
-              name: debit.connect.name,
+    const today = getKoreanTime(new Date());
+
+    const transactions = dates
+      .filter((date) => !isBefore(date, today))
+      .map((date) => {
+        return this.prisma.transaction.create({
+          data: {
+            debit: {
+              connect: {
+                name: debit.connect.name,
+              },
             },
-          },
-          credit: {
-            connect: {
-              name: credit.connect.name,
+            credit: {
+              connect: {
+                name: credit.connect.name,
+              },
             },
+            amount,
+            date,
           },
-          amount,
-          date,
-        },
+        });
       });
-    });
 
     return this.prisma.$transaction([
       ...transactions,
