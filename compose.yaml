@@ -1,0 +1,12 @@
+services:
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - woobuntu-finance-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+
+volumes:
+  woobuntu-finance-data:
