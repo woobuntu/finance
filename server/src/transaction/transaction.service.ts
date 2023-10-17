@@ -9,6 +9,7 @@ import {
   endOfToday,
   getDate,
   getMonth,
+  isAfter,
   isBefore,
   startOfTomorrow,
 } from 'date-fns';
@@ -108,6 +109,18 @@ export class TransactionService {
       data: transaction,
     });
 
+    const nextPeriodicTransactionId =
+      (await this.prisma.periodicTransaction.findMany()).length + 1;
+
+    const lastTransactionId = (
+      await this.prisma.transaction.findMany({
+        orderBy: {
+          id: 'desc',
+        },
+        take: 1,
+      })
+    )[0].id;
+
     if (
       (await this.accountService.haveParentAccount({
         accountName: debit.connect.name,
@@ -134,49 +147,66 @@ export class TransactionService {
 
       const dates = [];
 
-      while (isBefore(date, endDate) || isEqual(date, endDate)) {
+      while (!isAfter(date, endDate)) {
         dates.push(date);
         date = addMonths(date, 1);
       }
 
-      const transactions = dates.map((date) => {
-        const creditAccountName =
-          getDate(date) < 18
-            ? `${credit.connect.name}(${getMonth(addMonths(date, 1)) + 1}월)`
-            : `${credit.connect.name}(${getMonth(addMonths(date, 2)) + 1}월)`;
+      const today = getKoreanTime(new Date());
 
-        return this.prisma.transaction.create({
-          data: {
-            debit: {
-              connect: {
-                name: debit.connect.name,
-              },
-            },
-            credit: {
-              connectOrCreate: {
-                where: {
-                  name: creditAccountName,
+      const transactions = dates
+        .filter((date) => !isBefore(date, today))
+        .map((date) => {
+          const creditAccountName =
+            getDate(date) < 18
+              ? `${credit.connect.name}(${getMonth(addMonths(date, 1)) + 1}월)`
+              : `${credit.connect.name}(${getMonth(addMonths(date, 2)) + 1}월)`;
+
+          return this.prisma.transaction.create({
+            data: {
+              debit: {
+                connect: {
+                  name: debit.connect.name,
                 },
-                create: {
-                  name: creditAccountName,
-                  parentAccount: {
-                    connect: {
-                      name: credit.connect.name,
-                    },
+              },
+              credit: {
+                connectOrCreate: {
+                  where: {
+                    name: creditAccountName,
                   },
-                  side: 'CREDIT',
+                  create: {
+                    name: creditAccountName,
+                    parentAccount: {
+                      connect: {
+                        name: credit.connect.name,
+                      },
+                    },
+                    side: 'CREDIT',
+                  },
                 },
               },
+              amount,
+              date,
             },
-            amount,
-            date,
-          },
+          });
         });
-      });
+
+      const transactionIds = transactions.map(
+        (transaction, index) => lastTransactionId + index + 1,
+      );
+
+      const createPeriodicTransactionRecord =
+        this.prisma.periodicTransactionRecord.createMany({
+          data: transactionIds.map((transactionId) => ({
+            transactionId,
+            periodicTransactionId: nextPeriodicTransactionId,
+          })),
+        });
 
       return this.prisma.$transaction([
-        ...transactions,
         createPeriodicTransaction,
+        ...transactions,
+        createPeriodicTransactionRecord,
       ]);
     }
 
@@ -184,7 +214,7 @@ export class TransactionService {
 
     const dates = [];
 
-    while (isBefore(date, endDate) || isEqual(date, endDate)) {
+    while (!isAfter(date, endDate)) {
       dates.push(date);
       switch (interval) {
         case 'DAILY':
@@ -224,9 +254,22 @@ export class TransactionService {
         });
       });
 
+    const transactionIds = transactions.map(
+      (transaction, index) => lastTransactionId + index + 1,
+    );
+
+    const createPeriodicTransactionRecord =
+      this.prisma.periodicTransactionRecord.createMany({
+        data: transactionIds.map((transactionId) => ({
+          transactionId,
+          periodicTransactionId: nextPeriodicTransactionId,
+        })),
+      });
+
     return this.prisma.$transaction([
-      ...transactions,
       createPeriodicTransaction,
+      ...transactions,
+      createPeriodicTransactionRecord,
     ]);
   }
 
