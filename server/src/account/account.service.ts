@@ -147,6 +147,8 @@ export class AccountService {
 
     if (account.parentAccountName === parentAccountName) return true;
 
+    if (isNull(account.parentAccountName)) return false;
+
     return this.haveParentAccount({
       accountName: account.parentAccountName,
       parentAccountName,

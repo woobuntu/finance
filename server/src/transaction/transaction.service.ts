@@ -123,8 +123,8 @@ export class TransactionService {
       }
 
       if (
-        credit.connect.name !== '신한카드부채' &&
-        credit.connect.name !== '국민카드부채'
+        credit.connect.name !== '카드부채(신한)' &&
+        credit.connect.name !== '카드부채(국민)'
       ) {
         throw new Error('카드부채가 아닙니다.');
       }
