@@ -1,21 +1,61 @@
 services:
-  mysql:
+  # 이 이미지 안에서 프리스마 빌드?
+  database:
     image: mysql:8.0
     volumes:
-      - woobuntu-finance-data:/var/lib/mysql
+      - woobuntu-finance:/var/lib/mysql
+    env_file:
+      - .env
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
+    container_name: database
+
+  server:
+    image: woobuntu0903/woobuntu-finance-server
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    ports:
+      - 4000:4000
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@database:3306/${MYSQL_DATABASE}
+    depends_on:
+      - database
+    container_name: server
 
   nginx:
-    image: nginx:alpine
+    image: woobuntu0903/woobuntu-finance-nginx
     ports:
       - 80:80
+      - 443:443
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+      args:
+        - REACT_APP_API_BASE_URL=https://api.woobuntu.review
+    depends_on:
+      - server
     volumes:
-      - ./config/client.conf:/etc/nginx/conf.d/client.conf
-    # depends_on:
-    #   - php
+      - certbot-webroot:/usr/share/nginx/certbot
+      - certbot-config:/etc/letsencrypt
+    container_name: nginx
+
+  # certbot:
+  #   image: certbot/certbot
+  #   depends_on:
+  #     - nginx
+  #   container_name: certbot
+  #   volumes:
+  #     - certbot-webroot:/usr/share/nginx/certbot
+  #     - certbot-config:/etc/letsencrypt
+  #   env_file:
+  #     - .env
+  #   command: certonly --webroot --webroot-path=/usr/share/nginx/certbot --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email -d ${CLIENT_DOMAIN} -d ${SERVER_DOMAIN}
 
 volumes:
-  woobuntu-finance-data:
+  woobuntu-finance:
+  certbot-webroot:
+  certbot-config:

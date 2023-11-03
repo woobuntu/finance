@@ -8,8 +8,9 @@ export const AccountSelect = (props: {
   onChange: (event: any, newValue: AccountOption | null) => void;
   error: boolean;
   helperText: string;
+  disabled?: boolean;
 }) => {
-  const { value, onChange, error, helperText, options } = props;
+  const { value, onChange, error, helperText, options, disabled } = props;
 
   return (
     <Autocomplete
@@ -18,6 +19,7 @@ export const AccountSelect = (props: {
       options={options}
       getOptionLabel={(option) => option.name}
       groupBy={(option) => option.rootParentAccountName}
+      disabled={disabled}
       renderInput={(params) => (
         <TextField
           {...params}

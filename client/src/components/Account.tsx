@@ -1,10 +1,14 @@
 import {
+  Alert,
+  Button,
+  ButtonGroup,
   Collapse,
   IconButton,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
+  Snackbar,
   TextField,
 } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
@@ -21,6 +25,8 @@ import { QUERY_KEYS } from "../constants";
 import { isUndefined } from "lodash-es";
 import { isNestException } from "../utils/isNestException";
 import { getBalance } from "../utils/getBalance";
+import { useDeleteAccount } from "../hooks/useDeleteAccount";
+import React from "react";
 
 type AccountWithDepth = Prisma.AccountGetPayload<{
   include: {
@@ -112,6 +118,26 @@ export const Account = (props: AccountProps) => {
     });
   };
 
+  const deleteAccountMutation = useDeleteAccount({
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.GET_ACCOUNTS,
+      });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.GET_ACCOUNT_OPTIONS,
+      });
+    },
+    onError: (error: any) => {
+      alert(error);
+    },
+  });
+
+  const deleteAccount = () => {
+    deleteAccountMutation.mutate({
+      name,
+    });
+  };
+
   useEffect(() => {
     if (!open) {
       setIsAdding(false);
@@ -120,6 +146,29 @@ export const Account = (props: AccountProps) => {
       setErrorMessage("");
     }
   }, [open]);
+
+  const [isSnackbarOpen, setIsSnackbarOpen] = useState<boolean>(false);
+
+  const openSnackbar = () => {
+    setIsSnackbarOpen(true);
+  };
+
+  const closeSnackbar = () => {
+    setIsSnackbarOpen(false);
+  };
+
+  const action = (
+    <React.Fragment>
+      <ButtonGroup size="small">
+        <Button color="error" onClick={deleteAccount}>
+          O
+        </Button>
+        <Button color="inherit" onClick={closeSnackbar}>
+          X
+        </Button>
+      </ButtonGroup>
+    </React.Fragment>
+  );
 
   return (
     <Fragment>
@@ -147,10 +196,19 @@ export const Account = (props: AccountProps) => {
           depth > 0 &&
           !isUndefined(childAccounts) &&
           childAccounts.length === 0 && (
-            <IconButton>
+            <IconButton onClick={openSnackbar}>
               <RemoveIcon />
             </IconButton>
           )}
+        <Snackbar
+          open={isSnackbarOpen}
+          autoHideDuration={6000}
+          onClose={closeSnackbar}
+        >
+          <Alert severity="error" sx={{ width: "100%" }} action={action}>
+            정말로 삭제하시겠습니까?
+          </Alert>
+        </Snackbar>
       </ListItem>
 
       <Collapse in={open} timeout="auto" unmountOnExit>
@@ -173,6 +231,7 @@ export const Account = (props: AccountProps) => {
                 <ListItemIcon />
 
                 <TextField
+                  autoFocus
                   variant="filled"
                   error={isError}
                   value={newAccount}

@@ -15,13 +15,13 @@ import PaidIcon from "@mui/icons-material/Paid";
 
 function MenuIcon(props: { page: Page }) {
   switch (props.page) {
-    case PAGES.CALENDAR:
+    case PAGES.DAYS:
       return <TodayIcon />;
-    case PAGES.ACCOUNTS:
+    case PAGES.GENERAL_LEDGER:
       return <BookIcon />;
     case PAGES.TRANSACTIONS:
       return <UpdateIcon />;
-    case PAGES.INCOME_STATEMENT:
+    case PAGES.PERIODS:
       return <PaidIcon />;
   }
 }

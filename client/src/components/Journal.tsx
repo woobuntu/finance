@@ -1,186 +1,115 @@
 import {
-  Box,
+  Autocomplete,
+  Collapse,
   IconButton,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
-  TableFooter,
   TableHead,
   TableRow,
-  Toolbar,
+  TextField,
   Typography,
 } from "@mui/material";
-import PostAddIcon from "@mui/icons-material/PostAdd";
-import { AddJournalRow } from "./AddJournalRow";
-import SaveIcon from "@mui/icons-material/Save";
-import { JournalAction, JournalState } from "../hooks/useJournalReducer";
 import { ExtendedTransaction } from "@prisma-custom-types";
-import { useCreateTransaction } from "../hooks/useCreateTransaction";
-import { useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "../constants";
-import { isNull } from "lodash-es";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { useState } from "react";
+import { TransactionRow } from "./TransactionRow";
+import { useGetTags } from "../hooks/useGetTags";
+import { isNull, isUndefined } from "lodash-es";
 
 export const Journal = ({
+  transactions,
   selectedDate,
-  transactionsOfTheDay,
-  journalState,
-  journalDispatch,
 }: {
+  transactions: ExtendedTransaction[];
   selectedDate: Date;
-  transactionsOfTheDay: ExtendedTransaction[];
-  journalState: JournalState;
-  journalDispatch: React.Dispatch<JournalAction>;
 }) => {
-  const onClickAdd = () => {
-    journalDispatch({
-      type: "SET_IS_ADDING",
-      isAdding: true,
-    });
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  const toggleIsOpen = () => {
+    setIsOpen(!isOpen);
   };
 
-  const queryClient = useQueryClient();
+  const { data, isLoading: isTagLoading } = useGetTags();
 
-  const mutation = useCreateTransaction({
-    onSuccess: () => {
-      journalDispatch({
-        type: "RESET",
-      });
-      queryClient.invalidateQueries({
-        queryKey: [...QUERY_KEYS.GET_TRANSACTIONS, selectedDate],
-      });
-    },
-    onError: (error) => {},
-  });
+  const [tagToFilter, setTagToFilter] = useState<string | null>(null);
 
-  const onClickSave = () => {
-    if (
-      isNull(journalState.selectedDebitOption) ||
-      isNull(journalState.selectedCreditOption) ||
-      journalState.amount === ""
-    ) {
-      if (isNull(journalState.selectedDebitOption)) {
-        journalDispatch({
-          type: "SET_DEBIT_EMPTY",
-          isDebitEmpty: true,
-        });
-      }
-      if (isNull(journalState.selectedCreditOption)) {
-        journalDispatch({
-          type: "SET_CREDIT_EMPTY",
-          isCreditEmpty: true,
-        });
-      }
-      if (journalState.amount === "") {
-        journalDispatch({
-          type: "SET_AMOUNT_EMPTY",
-          isAmountEmpty: true,
-        });
-      }
-      return;
-    }
-
-    mutation.mutate({
-      debit: {
-        connect: {
-          name: journalState.selectedDebitOption.name,
-        },
-      },
-      amount: parseInt(journalState.amount),
-      credit: {
-        connect: {
-          name: journalState.selectedCreditOption.name,
-        },
-      },
-      date: selectedDate.toString(),
-    });
+  const onChangeFilterTag = (event: any, newValue: string | null) => {
+    setTagToFilter(newValue);
   };
 
   return (
-    <Box>
-      <Paper>
-        <Toolbar>
-          <Typography
-            sx={{
-              flex: "1 1 100%",
-            }}
-            variant="h6"
-            component="div"
-          >
-            분개장
-          </Typography>
-        </Toolbar>
-        <TableContainer>
-          <Table
-            sx={{
-              minWidth: 550,
-            }}
-          >
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  align="center"
-                  sx={{
-                    width: `${100 / 3}%`,
-                  }}
-                >
-                  차변계정
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    width: `${100 / 3}%`,
-                  }}
-                >
-                  거래액
-                </TableCell>
-                <TableCell
-                  align="center"
-                  sx={{
-                    width: `${100 / 3}%`,
-                  }}
-                >
-                  대변계정
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {transactionsOfTheDay.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell align="center">
-                    {transaction.debitAccountName}
+    <Stack direction="column" spacing={2}>
+      <Stack direction="row" paddingX={2} justifyContent="space-between">
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <IconButton onClick={toggleIsOpen}>
+            {isOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+          </IconButton>
+
+          <Typography variant="h6">거래내역</Typography>
+        </Stack>
+
+        {!isTagLoading && !isUndefined(data) && (
+          <Autocomplete
+            value={tagToFilter}
+            onChange={onChangeFilterTag}
+            options={data.map((tag) => tag.name)}
+            sx={{ width: 150 }}
+            renderInput={(params) => (
+              <TextField {...params} label="태그 필터" />
+            )}
+          />
+        )}
+      </Stack>
+      <Collapse in={isOpen}>
+        <Stack direction="column" spacing={2}>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell />
+                  <TableCell
+                    align="center"
+                    sx={{
+                      width: "45%",
+                    }}
+                  >
+                    메모
                   </TableCell>
-                  <TableCell align="center">
-                    {`${transaction.amount.toLocaleString()}원`}
-                  </TableCell>
-                  <TableCell align="center">
-                    {transaction.creditAccountName}
+                  <TableCell
+                    align="center"
+                    sx={{
+                      width: "45%",
+                    }}
+                  >
+                    거래액
                   </TableCell>
                 </TableRow>
-              ))}
-              {journalState.isAdding && (
-                <AddJournalRow
-                  journalState={journalState}
-                  journalDispatch={journalDispatch}
-                />
-              )}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={2} />
-                <TableCell align="center">
-                  <IconButton
-                    onClick={journalState.isAdding ? onClickSave : onClickAdd}
-                  >
-                    {journalState.isAdding ? <SaveIcon /> : <PostAddIcon />}
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
-      </Paper>
-    </Box>
+              </TableHead>
+              <TableBody>
+                {transactions
+                  .filter(({ transactionTags }) => {
+                    if (isNull(tagToFilter)) return true;
+                    return transactionTags.some(
+                      ({ tagName }) => tagName === tagToFilter
+                    );
+                  })
+                  .map((transaction) => (
+                    <TransactionRow
+                      key={transaction.id}
+                      transaction={transaction}
+                      selectedDate={selectedDate}
+                    />
+                  ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Stack>
+      </Collapse>
+    </Stack>
   );
 };

@@ -5,3 +5,7 @@ node_modules
 example.json
 
 prisma/seed.ts
+
+*.pem
+
+wait-for

@@ -44,5 +44,10 @@ export type ExtendedTransaction = Prisma.TransactionGetPayload<{
         side: true;
       };
     };
+    transactionTags: true;
   };
 }>;
+
+export type CreateTransactionDTO = Prisma.TransactionCreateInput & {
+  installmentPeriod?: string;
+};

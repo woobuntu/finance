@@ -5,6 +5,7 @@ import { QUERY_KEYS } from "../constants";
 export type AccountOption = {
   name: string;
   side: "DEBIT" | "CREDIT";
+  parentAccountName: string | null;
   rootParentAccountName: string;
 };
 
@@ -20,5 +21,6 @@ export const useGetAccountOptions = () => {
   return useQuery({
     queryKey: QUERY_KEYS.GET_ACCOUNT_OPTIONS,
     queryFn: getAccountOptions,
+    staleTime: 1000 * 60 * 60 * 24,
   });
 };

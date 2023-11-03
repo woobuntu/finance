@@ -17,10 +17,12 @@ export class AccountController {
 
   @Get()
   getAccounts(
+    @Query('rootAccountName') rootAccountName: string | undefined,
     @Query('startDate', new ParseDateStringPipe()) startDate: Date | undefined,
     @Query('endDate', new ParseDateStringPipe()) endDate: Date,
   ) {
     return this.accountService.getAccounts({
+      rootAccountName: rootAccountName ?? null,
       startDate,
       endDate,
     });

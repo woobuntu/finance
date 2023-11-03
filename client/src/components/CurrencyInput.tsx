@@ -45,10 +45,11 @@ interface CurrencyInputProps {
   onChange: ChangeEventHandler<HTMLInputElement>;
   isErrored: boolean;
   helperText: string;
+  disabled?: boolean;
 }
 
 export const CurrencyInput = (props: CurrencyInputProps) => {
-  const { label, value, onChange, isErrored, helperText } = props;
+  const { label, value, onChange, isErrored, helperText, disabled } = props;
 
   return (
     <TextField
@@ -58,6 +59,7 @@ export const CurrencyInput = (props: CurrencyInputProps) => {
       label={label}
       value={value}
       onChange={onChange}
+      disabled={disabled}
       InputProps={{
         inputComponent: NumericFormatCustom as any,
       }}

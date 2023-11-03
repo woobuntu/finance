@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useIsFetching, useIsMutating } from "@tanstack/react-query";
 import { CustomAppBar } from "./CustomAppBar";
 import { PAGES, Page } from "../constants";
-import { CustomCalendar } from "../pages/CustomCalendar";
+import { DayView } from "../pages/DayView";
 import { ManageAccounts } from "../pages/ManageAccounts";
 import { PeriodicTransactions } from "../pages/PeriodicTransactions";
 import { DurationInfo } from "../pages/DurationInfo";
@@ -19,10 +19,11 @@ export const Main = ({
 
   const fetchingQueryCount = useIsFetching();
 
-  const [page, setPage] = useState<Page>(PAGES.CALENDAR);
+  const [page, setPage] = useState<Page>(PAGES.DAYS);
 
   const onClickMenu = (page: Page) => {
     setPage(page);
+    setIsDrawerOpen(false);
   };
 
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
@@ -58,10 +59,10 @@ export const Main = ({
         onClickMenu={onClickMenu}
         toggleDrawer={toggleDrawer}
       />
-      {page === PAGES.CALENDAR && <CustomCalendar />}
-      {page === PAGES.ACCOUNTS && <ManageAccounts />}
+      {page === PAGES.DAYS && <DayView />}
+      {page === PAGES.GENERAL_LEDGER && <ManageAccounts />}
       {page === PAGES.TRANSACTIONS && <PeriodicTransactions />}
-      {page === PAGES.INCOME_STATEMENT && <DurationInfo />}
+      {page === PAGES.PERIODS && <DurationInfo />}
     </Stack>
   );
 };

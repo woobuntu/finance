@@ -37,11 +37,13 @@ model Transaction {
   updatedAt                  DateTime                    @updatedAt
   amount                     Int
   date                       DateTime
+  note                       String?
   debit                      Account                     @relation("Debit", fields: [debitAccountName], references: [name])
   debitAccountName           String
   credit                     Account                     @relation("Credit", fields: [creditAccountName], references: [name])
   creditAccountName          String
   periodicTransactionRecords PeriodicTransactionRecord[]
+  transactionTags            TransactionTag[]
 }
 
 enum Interval {
@@ -51,7 +53,6 @@ enum Interval {
   YEARLY
 }
 
-// 크론 같은 걸로 자동 기록?
 model PeriodicTransaction {
   id                         Int                         @id @default(autoincrement())
   createdAt                  DateTime                    @default(now())
@@ -60,6 +61,7 @@ model PeriodicTransaction {
   interval                   Interval
   startDate                  DateTime
   endDate                    DateTime
+  note                       String?
   debit                      Account                     @relation("PeriodicDebit", fields: [debitAccountName], references: [name])
   debitAccountName           String
   credit                     Account                     @relation("PeriodicCredit", fields: [creditAccountName], references: [name])
@@ -76,4 +78,20 @@ model PeriodicTransactionRecord {
   periodicTransactionId Int
   transaction           Transaction         @relation(fields: [transactionId], references: [id])
   transactionId         Int
+}
+
+model Tag {
+  name            String           @id
+  createdAt       DateTime         @default(now())
+  transactionTags TransactionTag[]
+}
+
+model TransactionTag {
+  id            Int         @id @default(autoincrement())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId Int
+  tag           Tag         @relation(fields: [tagName], references: [name])
+  tagName       String
 }

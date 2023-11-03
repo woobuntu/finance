@@ -1,0 +1,21 @@
+FROM node:alpine
+
+WORKDIR /app
+
+COPY ./prisma ./prisma
+COPY package.json yarn.lock ./
+
+RUN yarn install --frozen-lockfile
+RUN npx prisma generate
+
+COPY ./server ./server
+COPY global-types.ts ./
+
+WORKDIR /app/server
+
+RUN yarn install --frozen-lockfile
+RUN yarn build 
+
+EXPOSE 4000
+
+CMD ["yarn","start:prod"]

@@ -7,10 +7,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class AccountService {
   constructor(private readonly prisma: PrismaService) {}
 
-  getAccounts({ startDate, endDate }: { startDate: Date; endDate: Date }) {
+  getAccounts({
+    rootAccountName,
+    startDate,
+    endDate,
+  }: {
+    rootAccountName: string | null;
+    startDate: Date;
+    endDate: Date;
+  }) {
     return this.prisma.account.findMany({
       where: {
-        parentAccountName: null,
+        parentAccountName: rootAccountName,
       },
       include: {
         debitRelatedTransactions: {
@@ -113,6 +121,7 @@ export class AccountService {
         return {
           name,
           side,
+          parentAccountName,
           rootParentAccountName,
         };
       }),

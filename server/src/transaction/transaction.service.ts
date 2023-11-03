@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CreateTransactionDTO } from '@prisma-custom-types';
 import { Prisma } from '@prisma/client';
 import {
   addDays,
@@ -9,11 +10,21 @@ import {
   endOfToday,
   getDate,
   getMonth,
+  getYear,
   isAfter,
   isBefore,
   startOfTomorrow,
 } from 'date-fns';
-import { isEqual, isString, isUndefined } from 'lodash';
+import {
+  add,
+  divide,
+  isEqual,
+  isNull,
+  isString,
+  isUndefined,
+  lte,
+  toNumber,
+} from 'lodash';
 import { AccountService } from 'src/account/account.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getKoreanTime } from 'src/utils/getKoreanTime';
@@ -64,6 +75,7 @@ export class TransactionService {
             lte: endOfDay(endDate),
           },
         };
+
     return this.prisma.transaction.findMany({
       where: {
         ...dateSelector,
@@ -80,6 +92,7 @@ export class TransactionService {
             side: true,
           },
         },
+        transactionTags: true,
       },
       orderBy: {
         date: 'desc',
@@ -87,9 +100,127 @@ export class TransactionService {
     });
   }
 
-  async createTransaction(transaction: Prisma.TransactionCreateInput) {
+  async createTransaction(transaction: CreateTransactionDTO) {
+    const credit = await this.prisma.account.findUnique({
+      where: {
+        name: transaction.credit.connect.name,
+      },
+      include: {
+        parentAccount: true,
+      },
+    });
+
+    if (credit.parentAccount.name === '카드부채') {
+      if (!isUndefined(transaction.installmentPeriod)) {
+        const {
+          installmentPeriod,
+          ...transactionDataWithoutInstallmentPeriod
+        } = transaction;
+
+        // 카드 할부 거래
+        const numberedInstallmentPeriod = toNumber(installmentPeriod);
+
+        const transactions = Array.from(
+          {
+            length: numberedInstallmentPeriod,
+          },
+          (v, i) => addMonths(transaction.date as Date, i),
+        ).map((transactionDate) => {
+          const day = getDate(transactionDate);
+
+          const nextMonth = addMonths(transactionDate, 1);
+
+          const theMonthAfterNextMonth = addMonths(transactionDate, 2);
+
+          const year = lte(day, 17)
+            ? getYear(nextMonth)
+            : getYear(theMonthAfterNextMonth);
+
+          const month = add(
+            lte(day, 17)
+              ? getMonth(nextMonth)
+              : getMonth(theMonthAfterNextMonth),
+            1,
+          );
+
+          const creditAccountName = `${credit.name}_${year}.${month}`;
+
+          return this.prisma.transaction.create({
+            data: {
+              ...transactionDataWithoutInstallmentPeriod,
+              amount: divide(transaction.amount, numberedInstallmentPeriod),
+              credit: {
+                connectOrCreate: {
+                  where: {
+                    name: creditAccountName,
+                  },
+                  create: {
+                    name: creditAccountName,
+                    parentAccount: {
+                      connect: {
+                        name: credit.name,
+                      },
+                    },
+                    side: 'CREDIT',
+                  },
+                },
+              },
+            },
+          });
+        });
+
+        return this.prisma.$transaction(transactions);
+      }
+      // 카드 일시불 거래
+
+      const day = getDate(transaction.date as Date);
+
+      const nextMonth = addMonths(transaction.date as Date, 1);
+
+      const theMonthAfterNextMonth = addMonths(transaction.date as Date, 2);
+
+      const year = lte(day, 17)
+        ? getYear(nextMonth)
+        : getYear(theMonthAfterNextMonth);
+
+      const month = add(
+        lte(day, 17) ? getMonth(nextMonth) : getMonth(theMonthAfterNextMonth),
+        1,
+      );
+
+      const creditAccountName = `${credit.name}_${year}.${month}`;
+
+      return this.prisma.transaction.create({
+        data: {
+          ...transaction,
+          credit: {
+            connectOrCreate: {
+              where: {
+                name: creditAccountName,
+              },
+              create: {
+                name: creditAccountName,
+                parentAccount: {
+                  connect: {
+                    name: credit.name,
+                  },
+                },
+                side: 'CREDIT',
+              },
+            },
+          },
+        },
+      });
+    }
+    // 일반 거래
     return this.prisma.transaction.create({
       data: transaction,
+    });
+  }
+
+  async deleteTransaction(where: Prisma.TransactionWhereUniqueInput) {
+    return this.prisma.transaction.delete({
+      where,
     });
   }
 

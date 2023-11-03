@@ -14,6 +14,7 @@ import { Prisma } from '@prisma/client';
 import { ParseDateStringPipe } from 'src/pipes/parse-date-string.pipe';
 import { ParseTransactionCreateInputPipe } from 'src/pipes/parse-transaction-create-input.pipe';
 import { ParsePeriodicTransactionCreateInputPipe } from 'src/pipes/parse-periodic-transaction-create-input.pipe';
+import { CreateTransactionDTO } from '@prisma-custom-types';
 
 @Controller('transactions')
 export class TransactionController {
@@ -40,9 +41,14 @@ export class TransactionController {
   @Post()
   async createTransaction(
     @Body(new ParseTransactionCreateInputPipe())
-    transaction: Prisma.TransactionCreateInput,
+    transaction: CreateTransactionDTO,
   ) {
     return this.transactionService.createTransaction(transaction);
+  }
+
+  @Delete(':id')
+  async deleteTransaction(@Param('id', ParseIntPipe) id: number) {
+    return this.transactionService.deleteTransaction({ id });
   }
 
   @Post('periodic')

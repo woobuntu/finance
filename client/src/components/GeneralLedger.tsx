@@ -29,7 +29,7 @@ export const GeneralLedger = ({
   });
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} paddingBottom={3}>
       <AccountSelect
         label="계정과목"
         value={journalState.selectedDebitOption}

@@ -1,5 +1,6 @@
 import { PipeTransform } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { getKoreanTime } from 'src/utils/getKoreanTime';
 
 export class ParseTransactionCreateInputPipe
   implements
@@ -10,7 +11,7 @@ export class ParseTransactionCreateInputPipe
   ): Prisma.TransactionCreateInput {
     return {
       ...value,
-      date: new Date(value.date.toString().replace(/\+/, ' ')),
+      date: getKoreanTime(new Date(value.date)),
     };
   }
 }
