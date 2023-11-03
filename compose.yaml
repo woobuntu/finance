@@ -35,7 +35,7 @@ services:
       context: .
       dockerfile: Dockerfile.nginx
       args:
-        - REACT_APP_API_BASE_URL=https://api.woobuntu.review
+        - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
     depends_on:
       - server
     volumes:
