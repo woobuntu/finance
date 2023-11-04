@@ -13,6 +13,7 @@ import {
   getYear,
   isAfter,
   isBefore,
+  nextDay,
   startOfTomorrow,
 } from 'date-fns';
 import {
@@ -65,14 +66,14 @@ export class TransactionService {
             lte: endDate,
           },
         }
-      : isBefore(endDate, endOfToday())
+      : isBefore(endDate, getKoreanTime(startOfTomorrow()))
       ? {
           date: endDate,
         }
       : {
           date: {
             gte: new Date(startOfTomorrow().toString().replace(/\+/, ' ')),
-            lte: endOfDay(endDate),
+            lte: addDays(getKoreanTime(endDate), 1),
           },
         };
 
