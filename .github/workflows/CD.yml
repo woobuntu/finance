@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted, woobuntu-finance
+    runs-on: [self-hosted, ubuntu-latest]
     steps:
       - name: Download Docker Compose File
         uses: actions/download-artifact@v2
