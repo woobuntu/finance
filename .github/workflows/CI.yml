@@ -66,3 +66,4 @@ jobs:
         with:
           name: compose.yaml
           path: /home/ubuntu
+    needs: upload-compose-file
