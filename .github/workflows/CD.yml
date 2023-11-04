@@ -10,6 +10,7 @@ on:
 jobs:
   deploy:
     runs-on: [self-hosted, woobuntu-finance]
+    steps:
       - name: Log in to Docker hub
         uses: docker/login-action@v3
         with:
