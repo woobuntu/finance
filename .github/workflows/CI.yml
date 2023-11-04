@@ -40,7 +40,7 @@ jobs:
           docker compose build
           docker compose push
 
-  prepare-compose-file:
+  upload-compose-file:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -52,8 +52,17 @@ jobs:
           cp compose.yaml artifact/compose.yaml
 
       - name: Upload Docker Compose File
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: compose.yaml
           path: artifact/compose.yaml
     needs: build
+
+  download-compose-file:
+    runs-on: [self-hosted, woobuntu-finance]
+    steps:
+      - name: Download Docker Compose File
+        uses: actions/download-artifact@v3
+        with:
+          name: compose.yaml
+          path: /home/ubuntu
