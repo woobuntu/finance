@@ -19,8 +19,8 @@ jobs:
 
       - name: Pull Docker Compose Image
         run: |
-          docker compose -f compose.yaml pull
+          docker compose -f /home/ubuntu/compose.yaml pull
 
       - name: Start Docker Compose
         run: |
-          docker compose -f compose.yaml up -d --remove-orphans
+          docker compose -f /home/ubuntu/compose.yaml up -d --remove-orphans
