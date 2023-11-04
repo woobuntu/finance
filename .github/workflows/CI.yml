@@ -56,3 +56,4 @@ jobs:
         with:
           name: compose.yaml
           path: artifact/compose.yaml
+    needs: build
