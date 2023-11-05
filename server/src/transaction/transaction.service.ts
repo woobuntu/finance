@@ -111,7 +111,10 @@ export class TransactionService {
       },
     });
 
-    if (credit.parentAccount.name === '카드부채') {
+    if (
+      !isNull(credit.parentAccount) &&
+      credit.parentAccount.name === '카드부채'
+    ) {
       if (!isUndefined(transaction.installmentPeriod)) {
         const {
           installmentPeriod,
