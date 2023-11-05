@@ -8,6 +8,7 @@ import {
   TableBody,
   TableCell,
   TableContainer,
+  TableFooter,
   TableHead,
   TableRow,
   TextField,
@@ -41,6 +42,13 @@ export const Journal = ({
   const onChangeFilterTag = (event: any, newValue: string | null) => {
     setTagToFilter(newValue);
   };
+
+  const sumOfTransactions = transactions
+    .filter(({ transactionTags }) => {
+      if (isNull(tagToFilter)) return true;
+      return transactionTags.some(({ tagName }) => tagName === tagToFilter);
+    })
+    .reduce((acc, transaction) => acc + transaction.amount, 0);
 
   return (
     <Stack direction="column" spacing={2}>
@@ -106,6 +114,25 @@ export const Journal = ({
                     />
                   ))}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell align="center">합계</TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      width: "45%",
+                    }}
+                  />
+                  <TableCell
+                    align="center"
+                    sx={{
+                      width: "45%",
+                    }}
+                  >
+                    {`${sumOfTransactions.toLocaleString()}원`}
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
           </TableContainer>
         </Stack>
