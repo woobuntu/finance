@@ -56,7 +56,7 @@ export const DayView = () => {
           {!isNull(dateState.date) && (
             <IncomeStatement
               startDate={startOfDay(dateState.date)}
-              endDate={endOfDay(dateState.date)}
+              endDate={startOfDay(dateState.date)}
             />
           )}
 
