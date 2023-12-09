@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateAccountDTO } from '@prisma-custom-types';
+import { Prisma } from '@prisma/client';
 import { isNull, isUndefined } from 'lodash';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -197,6 +198,29 @@ export class AccountService {
     if (account) throw new BadRequestException('이미 존재하는 계정입니다.');
 
     return this.prisma.account.create({
+      data,
+    });
+  }
+
+  async updateAccount({
+    name,
+    data,
+  }: {
+    name: string;
+    data: Prisma.AccountUpdateInput;
+  }) {
+    const account = await this.prisma.account.findUnique({
+      where: {
+        name,
+      },
+    });
+
+    if (!account) throw new BadRequestException('존재하지 않는 계정입니다.');
+
+    return this.prisma.account.update({
+      where: {
+        name,
+      },
       data,
     });
   }

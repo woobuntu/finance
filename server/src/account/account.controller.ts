@@ -4,12 +4,14 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { CreateAccountDTO } from '@prisma-custom-types';
 import { ParseDateStringPipe } from 'src/pipes/parse-date-string.pipe';
+import { Prisma } from '@prisma/client';
 
 @Controller('accounts')
 export class AccountController {
@@ -36,6 +38,17 @@ export class AccountController {
   @Post()
   createAccount(@Body() data: CreateAccountDTO) {
     return this.accountService.createAccount(data);
+  }
+
+  @Patch(':name')
+  updateAccount(
+    @Param('name') name: string,
+    @Body() data: Prisma.AccountUpdateInput,
+  ) {
+    return this.accountService.updateAccount({
+      name,
+      data,
+    });
   }
 
   @Delete(':name')
